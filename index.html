@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safe Code Pad</title>
+
+<style>
+body {
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  transition:0.3s;
+}
+.container { text-align:center; width:320px; }
+.display {
+  width:100%; height:60px; font-size:2rem;
+  text-align:center; margin-bottom:20px;
+  border:none; border-radius:10px;
+  background:#222; color:white;
+  letter-spacing:10px;
+}
+.pad {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+button {
+  height:70px; font-size:1.5rem;
+  border:none; border-radius:10px;
+  background:#333; color:white;
+}
+.message {
+  position:absolute;
+  top:40%;
+  width:100%;
+  text-align:center;
+  font-size:2rem;
+  display:none;
+}
+.countdown { font-size:3rem; margin-top:20px; }
+.hidden { display:none!important; }
+</style>
+</head>
+
+<body>
+
+<div class="container" id="container">
+  <input type="text" id="display" class="display" readonly>
+  <div class="pad">
+    <button onclick="addDigit('1')">1</button>
+    <button onclick="addDigit('2')">2</button>
+    <button onclick="addDigit('3')">3</button>
+    <button onclick="addDigit('4')">4</button>
+    <button onclick="addDigit('5')">5</button>
+    <button onclick="addDigit('6')">6</button>
+    <button onclick="addDigit('7')">7</button>
+    <button onclick="addDigit('8')">8</button>
+    <button onclick="addDigit('9')">9</button>
+    <button onclick="clearCode()">C</button>
+    <button onclick="addDigit('0')">0</button>
+    <button onclick="checkCode()">OK</button>
+  </div>
+</div>
+
+<div id="message" class="message">
+  Code eingabe Korrekt sie haben 10 Sek den Raum zu verlassen
+  <div id="countdown" class="countdown">10</div>
+</div>
+
+<!-- AUDIO -->
+<audio id="successAudio" src="alarm.mp3"></audio>
+
+<script>
+const validCodes = ["1234","4321","1111","2222","2468","1357","2024","5555","8080","9999","3141","2718","1212","7777","4567"];
+
+let realCode = "";
+let locked = false;
+
+const container = document.getElementById("container");
+const display = document.getElementById("display");
+const message = document.getElementById("message");
+const countdownEl = document.getElementById("countdown");
+
+function addDigit(d){
+  if(locked) return;
+  if(realCode.length<4){
+    realCode+=d;
+    display.value="*".repeat(realCode.length);
+  }
+}
+
+function clearCode(){
+  if(locked) return;
+  realCode="";
+  display.value="";
+}
+
+function checkCode(){
+  if(locked || realCode.length!==4) return;
+
+  if(validCodes.includes(realCode)){
+    success();
+  } else {
+    locked=true;
+    document.body.style.background="red";
+    setTimeout(reset,1500);
+  }
+}
+
+function success(){
+  locked=true;
+  document.body.style.background="green";
+
+  playSound();
+
+  container.classList.add("hidden");
+  message.style.display="block";
+
+  let time=10;
+  countdownEl.textContent=time;
+
+  setTimeout(()=>{
+    const i=setInterval(()=>{
+      time--;
+      countdownEl.textContent=time;
+
+      if(time<=0){
+        clearInterval(i);
+        setTimeout(reset,1000);
+      }
+    },1000);
+  },2000);
+}
+
+function reset(){
+  realCode="";
+  locked=false;
+  display.value="";
+  container.classList.remove("hidden");
+  message.style.display="none";
+  countdownEl.textContent="10";
+  document.body.style.background="#111";
+}
+
+function playSound(){
+  const audio = document.getElementById("successAudio");
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = 1.0;
+  audio.play();
+}
+</script>
+
+</body>
+</html>
